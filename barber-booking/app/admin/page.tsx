@@ -131,15 +131,15 @@ export default function AdminPage() {
           </h2>
 
           <DatePicker
-            selected={blockedDate}
-            onChange={(
-              date: Date | null
-            ) => setBlockedDate(date)}
-            minDate={new Date()}
-            dateFormat="dd.MM.yyyy"
-            placeholderText="Wybierz dzień"
-            className="w-full mb-6 p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
-          />
+  selected={blockedDate}
+  onChange={(date: Date | null) =>
+    setBlockedDate(date)
+  }
+  minDate={new Date()}
+  dateFormat="dd.MM.yyyy"
+  placeholderText="Wybierz dzień"
+  className="w-full mb-6 p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
+/>
 
           <button
             onClick={blockDate}
