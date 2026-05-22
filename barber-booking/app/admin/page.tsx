@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [blockedDate, setBlockedDate] =
     useState<Date | null>(null);
 
+  // LOGIN
   useEffect(() => {
     const auth =
       localStorage.getItem("admin-auth");
@@ -29,6 +30,7 @@ export default function AdminPage() {
     fetchBookings();
   }, []);
 
+  // POBIERANIE REZERWACJI
   const fetchBookings = async () => {
     const { data, error } = await supabase
       .from("bookings")
@@ -73,7 +75,7 @@ export default function AdminPage() {
     }
   };
 
-  // ZABLOKUJ DZIEŃ
+  // BLOKADA DNIA
   const blockDate = async () => {
     if (!blockedDate) return;
 
@@ -123,7 +125,7 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* BLOKADA DNI */}
+        {/* BLOKOWANIE DNI */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
           <h2 className="text-2xl font-bold mb-6">
             Zablokuj dzień
@@ -131,7 +133,7 @@ export default function AdminPage() {
 
           <DatePicker
             selected={blockedDate}
-            onChange={(date) =>
+            onChange={(date: Date | null) =>
               setBlockedDate(date)
             }
             minDate={new Date()}
