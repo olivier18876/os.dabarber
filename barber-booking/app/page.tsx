@@ -274,7 +274,13 @@ export default function Home() {
               onChange={(
                 date: Date | null
               ) => setSelectedDate(date)}
-              minDate={new Date()}
+              minDate={
+  new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    new Date().getDate()
+  )
+}
               excludeDates={blockedDates}
               dateFormat="dd.MM.yyyy"
               placeholderText="Wybierz dzień"
