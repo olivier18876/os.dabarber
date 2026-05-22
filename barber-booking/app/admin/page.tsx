@@ -17,6 +17,12 @@ export default function AdminPage() {
   const [blockedDate, setBlockedDate] =
     useState<Date | null>(null);
 
+  const [hours, setHours] =
+    useState<any[]>([]);
+
+  const [newHour, setNewHour] =
+    useState("");
+
   // LOGIN
   useEffect(() => {
     const auth =
@@ -27,11 +33,12 @@ export default function AdminPage() {
     }
 
     fetchBookings();
+    fetchHours();
   }, []);
 
-  // POBIERANIE REZERWACJI
+  // REZERWACJE
   const fetchBookings = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("bookings")
       .select("*")
       .order("created_at", {
@@ -41,9 +48,46 @@ export default function AdminPage() {
     if (data) {
       setBookings(data);
     }
+  };
 
-    if (error) {
-      console.log(error);
+  // GODZINY
+  const fetchHours = async () => {
+    const { data } = await supabase
+      .from("barber_hours")
+      .select("*");
+
+    if (data) {
+      setHours(data);
+    }
+  };
+
+  // DODAJ GODZINĘ
+  const addHour = async () => {
+    if (!newHour) return;
+
+    const { error } = await supabase
+      .from("barber_hours")
+      .insert([
+        {
+          hour: newHour,
+        },
+      ]);
+
+    if (!error) {
+      setNewHour("");
+      fetchHours();
+    }
+  };
+
+  // USUŃ GODZINĘ
+  const deleteHour = async (id: number) => {
+    const { error } = await supabase
+      .from("barber_hours")
+      .delete()
+      .eq("id", id);
+
+    if (!error) {
+      fetchHours();
     }
   };
 
@@ -54,7 +98,7 @@ export default function AdminPage() {
     router.push("/login");
   };
 
-  // USUWANIE REZERWACJI
+  // USUŃ REZERWACJĘ
   const deleteBooking = async (
     id: number
   ) => {
@@ -74,7 +118,7 @@ export default function AdminPage() {
     }
   };
 
-  // BLOKOWANIE DNIA
+  // BLOKADA DNIA
   const blockDate = async () => {
     if (!blockedDate) return;
 
@@ -94,25 +138,21 @@ export default function AdminPage() {
 
       setBlockedDate(null);
     }
-
-    if (error) {
-      console.log(error);
-    }
   };
 
   return (
-    <main className="min-h-screen bg-black text-white p-8">
+    <main className="min-h-screen bg-black text-white p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
 
         {/* HEADER */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-5xl font-black text-yellow-500 mb-2">
+            <h1 className="text-4xl md:text-5xl font-black text-yellow-500 mb-2">
               PANEL ADMINA
             </h1>
 
             <p className="text-zinc-400">
-              Zarządzanie wizytami 💈
+              Zarządzanie barberem 💈
             </p>
           </div>
 
@@ -124,6 +164,51 @@ export default function AdminPage() {
           </button>
         </div>
 
+        {/* GODZINY */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
+          <h2 className="text-2xl font-bold mb-6">
+            Godziny pracy
+          </h2>
+
+          <div className="flex gap-3 mb-6">
+            <input
+              placeholder="09:00"
+              value={newHour}
+              onChange={(e) =>
+                setNewHour(e.target.value)
+              }
+              className="w-full p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
+            />
+
+            <button
+              onClick={addHour}
+              className="bg-yellow-500 text-black px-6 rounded-2xl font-black"
+            >
+              Dodaj
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {hours.map((hour) => (
+              <div
+                key={hour.id}
+                className="bg-black border border-zinc-700 px-4 py-3 rounded-2xl flex items-center gap-3"
+              >
+                <span>{hour.hour}</span>
+
+                <button
+                  onClick={() =>
+                    deleteHour(hour.id)
+                  }
+                  className="text-red-500 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* BLOKOWANIE DNI */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
           <h2 className="text-2xl font-bold mb-6">
@@ -131,15 +216,15 @@ export default function AdminPage() {
           </h2>
 
           <DatePicker
-  selected={blockedDate}
-  onChange={(date: Date | null) =>
-    setBlockedDate(date)
-  }
-  minDate={new Date()}
-  dateFormat="dd.MM.yyyy"
-  placeholderText="Wybierz dzień"
-  className="w-full mb-6 p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
-/>
+            selected={blockedDate}
+            onChange={(date: Date | null) =>
+              setBlockedDate(date)
+            }
+            minDate={new Date()}
+            dateFormat="dd.MM.yyyy"
+            placeholderText="Wybierz dzień"
+            className="w-full mb-6 p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
+          />
 
           <button
             onClick={blockDate}

@@ -8,13 +8,22 @@ import "react-datepicker/dist/react-datepicker.css";
 import { supabase } from "../lib/supabase";
 
 export default function Home() {
-  const [selectedHour, setSelectedHour] = useState("");
+  const [selectedHour, setSelectedHour] =
+    useState("");
+
   const [selectedDate, setSelectedDate] =
     useState<Date | null>(null);
 
   const [name, setName] = useState("");
+
   const [phone, setPhone] = useState("");
-  const [service, setService] = useState("Strzyżenie");
+
+  const [service, setService] =
+    useState("Strzyżenie");
+
+  // GODZINY Z BAZY
+  const [hours, setHours] =
+    useState<any[]>([]);
 
   // ZAJĘTE GODZINY
   const [bookedHours, setBookedHours] =
@@ -24,16 +33,24 @@ export default function Home() {
   const [blockedDates, setBlockedDates] =
     useState<Date[]>([]);
 
-  // GODZINY
-  const hours = [
-    "9:00",
-    "10:30",
-    "12:00",
-    "13:30",
-    "15:00",
-    "16:30",
-    "18:00",
-  ];
+  // POBIERANIE GODZIN
+  useEffect(() => {
+    const fetchHours = async () => {
+      const { data, error } = await supabase
+        .from("barber_hours")
+        .select("*");
+
+      if (data) {
+        setHours(data);
+      }
+
+      if (error) {
+        console.log(error);
+      }
+    };
+
+    fetchHours();
+  }, []);
 
   // POBIERANIE ZAJĘTYCH GODZIN
   useEffect(() => {
@@ -41,7 +58,15 @@ export default function Home() {
       if (!selectedDate) return;
 
       const formattedDate =
-        selectedDate.toISOString().split("T")[0];
+  `${selectedDate.getFullYear()}-${
+    String(
+      selectedDate.getMonth() + 1
+    ).padStart(2, "0")
+  }-${
+    String(
+      selectedDate.getDate()
+    ).padStart(2, "0")
+  }`;
 
       const { data, error } = await supabase
         .from("bookings")
@@ -50,7 +75,8 @@ export default function Home() {
 
       if (data) {
         const booked = data.map(
-          (booking: any) => booking.booking_hour
+          (booking: any) =>
+            booking.booking_hour
         );
 
         setBookedHours(booked);
@@ -92,7 +118,8 @@ export default function Home() {
   const handlePhoneChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const numbersOnly = e.target.value.replace(/\D/g, "");
+    const numbersOnly =
+      e.target.value.replace(/\D/g, "");
 
     if (numbersOnly.length <= 9) {
       setPhone(numbersOnly);
@@ -108,16 +135,28 @@ export default function Home() {
       !selectedHour
     ) {
       alert("Uzupełnij wszystkie pola");
+
       return;
     }
 
     if (phone.length !== 9) {
-      alert("Numer telefonu musi mieć 9 cyfr");
+      alert(
+        "Numer telefonu musi mieć 9 cyfr"
+      );
+
       return;
     }
 
-    const formattedDate =
-      selectedDate.toISOString().split("T")[0];
+   const formattedDate =
+  `${selectedDate.getFullYear()}-${
+    String(
+      selectedDate.getMonth() + 1
+    ).padStart(2, "0")
+  }-${
+    String(
+      selectedDate.getDate()
+    ).padStart(2, "0")
+  }`;
 
     const fullPhone = `+48${phone}`;
 
@@ -134,7 +173,10 @@ export default function Home() {
       ]);
 
     if (error) {
-      alert("Błąd rezerwacji");
+      alert(
+        "Ta godzina jest już zajęta 😄"
+      );
+
       console.log(error);
     } else {
       alert("Rezerwacja zapisana 💈");
@@ -152,33 +194,41 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white p-8">
+    <main className="min-h-screen bg-black text-white p-4 md:p-8">
       <div className="mx-auto max-w-5xl">
 
-        <h1 className="text-5xl font-black text-yellow-500 mb-4">
-          OSDA BARBER
-        </h1>
+        {/* HEADER */}
+        <div className="mb-10 text-center">
+          <h1 className="text-5xl md:text-7xl font-black text-yellow-500 mb-4 tracking-tight">
+            OSDA BARBER
+          </h1>
 
-        <p className="text-zinc-400 mb-12">
-          Rezerwacje online 💈
-        </p>
+          <p className="text-zinc-400 text-lg">
+            Rezerwacje online 💈
+          </p>
+        </div>
 
         <div className="grid gap-8 md:grid-cols-2">
 
           {/* LEWA */}
-          <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800">
-            <h2 className="text-2xl font-bold mb-6">
+          <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl shadow-2xl">
+
+            <h2 className="text-3xl font-black mb-8">
               Dane klienta
             </h2>
 
             <input
               placeholder="Imię"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full mb-4 p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
+              onChange={(e) =>
+                setName(e.target.value)
+              }
+              className="w-full mb-4 p-4 rounded-2xl bg-black border border-zinc-700 outline-none focus:border-yellow-500 transition"
             />
 
-            <div className="flex items-center mb-4 rounded-2xl bg-black border border-zinc-700 overflow-hidden">
+            {/* TELEFON */}
+            <div className="flex items-center mb-4 rounded-2xl bg-black border border-zinc-700 overflow-hidden focus-within:border-yellow-500">
+
               <div className="px-4 text-zinc-400 border-r border-zinc-700">
                 +48
               </div>
@@ -191,56 +241,70 @@ export default function Home() {
               />
             </div>
 
+            {/* USŁUGI */}
             <select
               value={service}
-              onChange={(e) => setService(e.target.value)}
-              className="w-full p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
+              onChange={(e) =>
+                setService(e.target.value)
+              }
+              className="w-full p-4 rounded-2xl bg-black border border-zinc-700 outline-none focus:border-yellow-500 transition"
             >
               <option>Strzyżenie</option>
-              <option>Strzyżenie + Design</option>
+
+              <option>
+                Strzyżenie + Design
+              </option>
+
               <option>Broda</option>
+
               <option>Combo</option>
             </select>
           </div>
 
           {/* PRAWA */}
-          <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800">
-            <h2 className="text-2xl font-bold mb-6">
+          <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl shadow-2xl">
+
+            <h2 className="text-3xl font-black mb-8">
               Wybierz termin
             </h2>
 
             {/* KALENDARZ */}
             <DatePicker
               selected={selectedDate}
-              onChange={(date: Date | null) =>
-                setSelectedDate(date)
-              }
+              onChange={(
+                date: Date | null
+              ) => setSelectedDate(date)}
               minDate={new Date()}
               excludeDates={blockedDates}
               dateFormat="dd.MM.yyyy"
               placeholderText="Wybierz dzień"
-              className="w-full mb-6 p-4 rounded-2xl bg-black border border-zinc-700 outline-none"
+              className="w-full mb-6 p-4 rounded-2xl bg-black border border-zinc-700 outline-none focus:border-yellow-500 transition"
             />
 
             {/* GODZINY */}
             <div className="grid grid-cols-2 gap-3">
-              {hours.map((hour) => {
+
+              {hours.map((hourItem) => {
+
+                const hour =
+                  hourItem.hour;
+
                 const isBooked =
                   bookedHours.includes(hour);
 
                 return (
                   <button
-                    key={hour}
+                    key={hourItem.id}
                     disabled={isBooked}
                     onClick={() =>
                       setSelectedHour(hour)
                     }
-                    className={`p-4 rounded-2xl font-bold transition ${
+                    className={`p-4 rounded-2xl font-black transition-all duration-200 ${
                       isBooked
                         ? "bg-red-500 opacity-60 cursor-not-allowed"
                         : selectedHour === hour
-                        ? "bg-yellow-500 text-black"
-                        : "bg-black border border-zinc-700 hover:border-yellow-500"
+                        ? "bg-yellow-500 text-black scale-105"
+                        : "bg-black border border-zinc-700 hover:border-yellow-500 hover:scale-105"
                     }`}
                   >
                     {isBooked
@@ -251,20 +315,29 @@ export default function Home() {
               })}
             </div>
 
+            {/* BUTTON */}
             <button
               onClick={handleBooking}
-              className="w-full mt-8 bg-yellow-500 text-black p-4 rounded-2xl font-black text-lg hover:scale-[1.02] transition"
+              className="w-full mt-8 bg-yellow-500 text-black p-5 rounded-2xl font-black text-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-xl"
             >
               Potwierdź rezerwację
             </button>
 
-            {selectedDate && selectedHour && (
-              <div className="mt-6 text-center text-yellow-500 font-bold">
-                Termin:{" "}
-                {selectedDate.toLocaleDateString()} •{" "}
-                {selectedHour}
-              </div>
-            )}
+            {/* PODSUMOWANIE */}
+            {selectedDate &&
+              selectedHour && (
+                <div className="mt-6 text-center bg-black border border-zinc-800 rounded-2xl p-4">
+
+                  <p className="text-zinc-400 mb-2">
+                    Wybrany termin
+                  </p>
+
+                  <p className="text-yellow-500 font-black text-xl">
+                    {selectedDate.toLocaleDateString()} •{" "}
+                    {selectedHour}
+                  </p>
+                </div>
+              )}
           </div>
         </div>
       </div>
