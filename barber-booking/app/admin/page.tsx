@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import DatePicker from "react-datepicker";
-
 import "react-datepicker/dist/react-datepicker.css";
 
 import { supabase } from "../../lib/supabase";
@@ -55,7 +54,7 @@ export default function AdminPage() {
     router.push("/login");
   };
 
-  // USUŃ REZERWACJĘ
+  // USUWANIE REZERWACJI
   const deleteBooking = async (
     id: number
   ) => {
@@ -75,7 +74,7 @@ export default function AdminPage() {
     }
   };
 
-  // BLOKADA DNIA
+  // BLOKOWANIE DNIA
   const blockDate = async () => {
     if (!blockedDate) return;
 
@@ -133,9 +132,9 @@ export default function AdminPage() {
 
           <DatePicker
             selected={blockedDate}
-           onChange={(date: Date | null) =>
-              setBlockedDate(date)
-            }
+            onChange={(
+              date: Date | null
+            ) => setBlockedDate(date)}
             minDate={new Date()}
             dateFormat="dd.MM.yyyy"
             placeholderText="Wybierz dzień"
