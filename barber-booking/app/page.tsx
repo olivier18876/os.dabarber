@@ -12,48 +12,32 @@ export default function Home() {
   const [phone, setPhone] = useState("");
   const [service, setService] = useState("Strzyżenie");
 
-  const [hours, setHours] = useState<any[]>([]);
+  // Domyślne godziny dla każdego dnia
+  const hours = ["09:00","10:00","11:00","12:00","13:00","14:00","16:00","17:00"];
+
   const [bookedHours, setBookedHours] = useState<string[]>([]);
   const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+  const [blockedHours, setBlockedHours] = useState<string[]>([]);
 
-  // pobranie godzin dla wybranego dnia
-  useEffect(() => {
-    const fetchHours = async () => {
-      if (!selectedDate) return;
-      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
-      const { data, error } = await supabase
-        .from("barber_day_hours")
-        .select("*")
-        .eq("day", formattedDate)
-        .order("hour", { ascending: true });
-      if (data) setHours(data);
-      if (error) console.log(error);
-    };
-    fetchHours();
-  }, [selectedDate]);
-
-  // pobranie zajętych godzin
+  // Pobranie zajętych godzin dla wybranego dnia
   useEffect(() => {
     const fetchBookings = async () => {
       if (!selectedDate) return;
-      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
-      const { data } = await supabase
-        .from("bookings")
-        .select("booking_hour")
-        .eq("booking_date", formattedDate);
-      if (data) setBookedHours(data.map((b: any) => b.booking_hour));
+      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`;
+      const { data } = await supabase.from("bookings").select("booking_hour").eq("booking_date", formattedDate);
+      if (data) setBookedHours(data.map((b:any)=>b.booking_hour));
     };
     fetchBookings();
   }, [selectedDate]);
 
-  // pobranie zablokowanych dni
+  // Pobranie zablokowanych dni
   useEffect(() => {
     const fetchBlockedDates = async () => {
       const { data } = await supabase.from("blocked_dates").select("*");
       if (data) {
-        const formattedDates = data.map((item: any) => {
+        const formattedDates = data.map((item:any)=>{
           const parts = item.blocked_date.split("-");
-          return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+          return new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
         });
         setBlockedDates(formattedDates);
       }
@@ -61,41 +45,44 @@ export default function Home() {
     fetchBlockedDates();
   }, []);
 
+  // Pobranie zablokowanych godzin dla wybranego dnia
+  useEffect(() => {
+    const fetchBlockedHours = async () => {
+      if (!selectedDate) return;
+      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`;
+      const { data } = await supabase.from("blocked_hours").select("*").eq("blocked_date", formattedDate);
+      if (data) setBlockedHours(data.map((b:any)=>b.blocked_hour));
+    };
+    fetchBlockedHours();
+  }, [selectedDate]);
+
+  // Walidacja telefonu
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const numbersOnly = e.target.value.replace(/\D/g, "");
     if (numbersOnly.length <= 9) setPhone(numbersOnly);
   };
 
+  // Zapis rezerwacji
   const handleBooking = async () => {
     if (!name || !phone || !selectedDate || !selectedHour) {
-      alert("Uzupełnij wszystkie pola");
-      return;
+      alert("Uzupełnij wszystkie pola"); return;
     }
-    if (phone.length !== 9) {
-      alert("Numer telefonu musi mieć 9 cyfr");
-      return;
-    }
-    const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+    if (phone.length !== 9) { alert("Numer telefonu musi mieć 9 cyfr"); return; }
+
+    const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`;
     const fullPhone = `+48${phone}`;
-    const { error } = await supabase.from("bookings").insert([
-      { name, phone: fullPhone, service, booking_date: formattedDate, booking_hour: selectedHour },
-    ]);
-    if (error) {
-      alert("Ta godzina jest już zajęta 😄");
-    } else {
+    const { error } = await supabase.from("bookings").insert([{ name, phone: fullPhone, service, booking_date: formattedDate, booking_hour: selectedHour }]);
+    if (error) { alert("Ta godzina jest już zajęta 😄"); console.log(error); }
+    else {
       alert("Rezerwacja zapisana 💈");
-      setBookedHours((prev) => [...prev, selectedHour]);
-      setName("");
-      setPhone("");
-      setSelectedDate(null);
-      setSelectedHour("");
+      setBookedHours(prev => [...prev, selectedHour]);
+      setName(""); setPhone(""); setSelectedDate(null); setSelectedHour("");
     }
   };
 
   return (
     <main className="min-h-screen bg-black text-white p-4 md:p-8">
       <div className="mx-auto max-w-5xl">
-        {/* HEADER */}
         <div className="mb-10 text-center">
           <h1 className="text-5xl md:text-7xl font-black text-yellow-500 mb-4 tracking-tight">OSDA BARBER</h1>
           <p className="text-zinc-400 text-lg">Rezerwacje online 💈</p>
@@ -105,12 +92,12 @@ export default function Home() {
           {/* LEWA */}
           <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl shadow-2xl">
             <h2 className="text-3xl font-black mb-8">Dane klienta</h2>
-            <input placeholder="Imię" value={name} onChange={(e) => setName(e.target.value)} className="w-full mb-4 p-4 rounded-2xl bg-black border border-zinc-700 outline-none focus:border-yellow-500 transition"/>
+            <input placeholder="Imię" value={name} onChange={(e)=>setName(e.target.value)} className="w-full mb-4 p-4 rounded-2xl bg-black border border-zinc-700 outline-none focus:border-yellow-500 transition"/>
             <div className="flex items-center mb-4 rounded-2xl bg-black border border-zinc-700 overflow-hidden focus-within:border-yellow-500">
               <div className="px-4 text-zinc-400 border-r border-zinc-700">+48</div>
               <input placeholder="123456789" value={phone} onChange={handlePhoneChange} className="w-full p-4 bg-black outline-none"/>
             </div>
-            <select value={service} onChange={(e) => setService(e.target.value)} className="w-full p-4 rounded-2xl bg-black border border-zinc-700 outline-none focus:border-yellow-500 transition">
+            <select value={service} onChange={(e)=>setService(e.target.value)} className="w-full p-4 rounded-2xl bg-black border border-zinc-700 outline-none focus:border-yellow-500 transition">
               <option>Strzyżenie</option>
               <option>Strzyżenie + Design</option>
               <option>Broda</option>
@@ -123,7 +110,7 @@ export default function Home() {
             <h2 className="text-3xl font-black mb-8">Wybierz termin</h2>
             <DatePicker
               selected={selectedDate}
-              onChange={(date: Date | null) => setSelectedDate(date)}
+              onChange={(date: Date | null)=>setSelectedDate(date)}
               minDate={new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())}
               excludeDates={blockedDates}
               dateFormat="dd.MM.yyyy"
@@ -132,19 +119,19 @@ export default function Home() {
             />
 
             <div className="grid grid-cols-2 gap-3">
-              {hours.map((hourItem) => {
-                const hour = hourItem.hour;
+              {hours.map(hour=>{
                 const isBooked = bookedHours.includes(hour);
+                const isBlocked = blockedHours.includes(hour);
                 const now = new Date();
-                const isToday = selectedDate && selectedDate.toDateString() === now.toDateString();
+                const isToday = selectedDate && selectedDate.toDateString()===now.toDateString();
                 const currentHour = now.getHours();
                 const bookingHour = parseInt(hour.split(":")[0]);
-                const isPastHour = isToday && bookingHour <= currentHour;
+                const isPastHour = isToday && bookingHour<=currentHour;
 
                 return (
-                  <button key={hourItem.id} disabled={isBooked || isPastHour} onClick={() => setSelectedHour(hour)}
-                    className={`p-4 rounded-2xl font-black transition-all duration-200 ${isBooked || isPastHour ? "bg-red-500 opacity-60 cursor-not-allowed" : selectedHour===hour ? "bg-yellow-500 text-black scale-105" : "bg-black border border-zinc-700 hover:border-yellow-500 hover:scale-105"}`}>
-                    {isBooked ? `${hour} Zajęte` : isPastHour ? `${hour} Minęło` : hour}
+                  <button key={hour} disabled={isBooked||isPastHour||isBlocked} onClick={()=>setSelectedHour(hour)}
+                    className={`p-4 rounded-2xl font-black transition-all duration-200 ${isBooked||isPastHour||isBlocked?"bg-red-500 opacity-60 cursor-not-allowed":selectedHour===hour?"bg-yellow-500 text-black scale-105":"bg-black border border-zinc-700 hover:border-yellow-500 hover:scale-105"}`}>
+                    {isBooked?`${hour} Zajęte`:isBlocked?`${hour} Wolne`:isPastHour?`${hour} Minęło`:hour}
                   </button>
                 )
               })}
