@@ -212,7 +212,7 @@ export default function Home() {
             {/* KALENDARZ */}
             <DatePicker
               selected={selectedDate}
-              onChange={(date) =>
+              onChange={(date: Date | null) =>
                 setSelectedDate(date)
               }
               minDate={new Date()}

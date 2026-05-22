@@ -133,7 +133,7 @@ export default function AdminPage() {
 
           <DatePicker
             selected={blockedDate}
-            onChange={(date: Date | null) =>
+           onChange={(date: Date | null) =>
               setBlockedDate(date)
             }
             minDate={new Date()}
