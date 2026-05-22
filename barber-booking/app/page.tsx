@@ -99,9 +99,17 @@ export default function Home() {
 
       if (data) {
         const formattedDates = data.map(
-          (item: any) =>
-            new Date(item.blocked_date)
-        );
+  (item: any) => {
+    const parts =
+      item.blocked_date.split("-");
+
+    return new Date(
+      Number(parts[0]),
+      Number(parts[1]) - 1,
+      Number(parts[2])
+    );
+  }
+);
 
         setBlockedDates(formattedDates);
       }
