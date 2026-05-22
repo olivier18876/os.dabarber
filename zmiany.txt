@@ -1,0 +1,3 @@
+git add .
+git commit -m "opis zmian" np. git commit -m "zmiana godzin"
+git push
