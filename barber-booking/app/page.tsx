@@ -84,7 +84,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white p-4 md:p-8">
       <div className="mx-auto max-w-5xl">
         <div className="mb-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-black text-yellow-500 mb-4 tracking-tight">OSDA BARBER</h1>
+          <h1 className="text-5xl md:text-7xl font-black text-yellow-500 mb-4 tracking-tight">OS.DABARBER</h1>
           <p className="text-zinc-400 text-lg">Rezerwacje online 💈</p>
         </div>
 
