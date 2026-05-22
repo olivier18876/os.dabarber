@@ -58,15 +58,15 @@ export default function Home() {
       if (!selectedDate) return;
 
       const formattedDate =
-  `${selectedDate.getFullYear()}-${
-    String(
-      selectedDate.getMonth() + 1
-    ).padStart(2, "0")
-  }-${
-    String(
-      selectedDate.getDate()
-    ).padStart(2, "0")
-  }`;
+        `${selectedDate.getFullYear()}-${
+          String(
+            selectedDate.getMonth() + 1
+          ).padStart(2, "0")
+        }-${
+          String(
+            selectedDate.getDate()
+          ).padStart(2, "0")
+        }`;
 
       const { data, error } = await supabase
         .from("bookings")
@@ -99,17 +99,17 @@ export default function Home() {
 
       if (data) {
         const formattedDates = data.map(
-  (item: any) => {
-    const parts =
-      item.blocked_date.split("-");
+          (item: any) => {
+            const parts =
+              item.blocked_date.split("-");
 
-    return new Date(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2])
-    );
-  }
-);
+            return new Date(
+              Number(parts[0]),
+              Number(parts[1]) - 1,
+              Number(parts[2])
+            );
+          }
+        );
 
         setBlockedDates(formattedDates);
       }
@@ -155,16 +155,16 @@ export default function Home() {
       return;
     }
 
-   const formattedDate =
-  `${selectedDate.getFullYear()}-${
-    String(
-      selectedDate.getMonth() + 1
-    ).padStart(2, "0")
-  }-${
-    String(
-      selectedDate.getDate()
-    ).padStart(2, "0")
-  }`;
+    const formattedDate =
+      `${selectedDate.getFullYear()}-${
+        String(
+          selectedDate.getMonth() + 1
+        ).padStart(2, "0")
+      }-${
+        String(
+          selectedDate.getDate()
+        ).padStart(2, "0")
+      }`;
 
     const fullPhone = `+48${phone}`;
 
@@ -283,12 +283,12 @@ export default function Home() {
                 date: Date | null
               ) => setSelectedDate(date)}
               minDate={
-  new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    new Date().getDate()
-  )
-}
+                new Date(
+                  new Date().getFullYear(),
+                  new Date().getMonth(),
+                  new Date().getDate()
+                )
+              }
               excludeDates={blockedDates}
               dateFormat="dd.MM.yyyy"
               placeholderText="Wybierz dzień"
@@ -306,23 +306,51 @@ export default function Home() {
                 const isBooked =
                   bookedHours.includes(hour);
 
+                const now =
+                  new Date();
+
+                const isToday =
+                  selectedDate &&
+                  selectedDate.toDateString() ===
+                    now.toDateString();
+
+                const currentHour =
+                  now.getHours();
+
+                const bookingHour =
+                  parseInt(
+                    hour.split(":")[0]
+                  );
+
+                const isPastHour =
+                  isToday &&
+                  bookingHour <=
+                    currentHour;
+
                 return (
                   <button
                     key={hourItem.id}
-                    disabled={isBooked}
+                    disabled={
+                      isBooked ||
+                      isPastHour
+                    }
                     onClick={() =>
                       setSelectedHour(hour)
                     }
                     className={`p-4 rounded-2xl font-black transition-all duration-200 ${
-                      isBooked
+                      isBooked ||
+                      isPastHour
                         ? "bg-red-500 opacity-60 cursor-not-allowed"
-                        : selectedHour === hour
+                        : selectedHour ===
+                          hour
                         ? "bg-yellow-500 text-black scale-105"
                         : "bg-black border border-zinc-700 hover:border-yellow-500 hover:scale-105"
                     }`}
                   >
                     {isBooked
                       ? `${hour} Zajęte`
+                      : isPastHour
+                      ? `${hour} Minęło`
                       : hour}
                   </button>
                 );

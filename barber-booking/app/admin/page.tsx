@@ -122,8 +122,16 @@ export default function AdminPage() {
   const blockDate = async () => {
     if (!blockedDate) return;
 
-    const formattedDate =
-      blockedDate.toISOString().split("T")[0];
+ const formattedDate =
+  `${blockedDate.getFullYear()}-${
+    String(
+      blockedDate.getMonth() + 1
+    ).padStart(2, "0")
+  }-${
+    String(
+      blockedDate.getDate()
+    ).padStart(2, "0")
+  }`;
 
     const { error } = await supabase
       .from("blocked_dates")
